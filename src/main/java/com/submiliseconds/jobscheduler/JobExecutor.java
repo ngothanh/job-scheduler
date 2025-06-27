@@ -5,4 +5,6 @@ public interface JobExecutor {
     int maxConcurrentJobs();
 
     void execute(Job job);
+
+    void shutdown();
 }
