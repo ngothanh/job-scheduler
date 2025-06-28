@@ -1,4 +1,8 @@
-> **"Scheduler must be safe to use across multiple threads."**
+
+# 📦 Sprint 1: Naive implementation
+
+
+> > **"Scheduler must be safe to use across multiple threads."**
 
 ---
 
@@ -86,4 +90,57 @@ In production-grade schedulers:
 * A **dispatcher thread** pulls from the delay queue and forwards to a `ThreadPoolExecutor`
 * All submission logic is **stateless** or **delegates to safe structures**
 
+
+# 📦 Sprint 2: Job Scheduler with Dispatcher & Delayed Execution
+
+## 🎯 Goal
+
+Upgrade the basic scheduler to a **production-grade** design with:
+
+* Proper **delayed job scheduling**
+* **Central dispatcher loop**
+* **Thread-safe queueing**
+* Preserved **max concurrency control**
+
 ---
+
+## ✅ Features Implemented
+
+| Feature                            | Description                                                 |
+| ---------------------------------- | ----------------------------------------------------------- |
+| **BlockingQueue-based scheduling** | Uses `DelayQueue` to manage both immediate and delayed jobs |
+| **Centralized Dispatcher Thread**  | One background thread pulls jobs and submits to executor    |
+| **Semaphore Enforcement**          | Max concurrency limit enforced at execution                 |
+| **Graceful Shutdown**              | Dispatcher and executor can be stopped cleanly              |
+| **Thread-safe Submission**         | Multiple threads can submit jobs concurrently               |
+
+---
+
+## ⚙️ Components
+
+### 1. `JobScheduler`
+
+* Exposes `.submit()` and `.submitDelayed()`
+* Internally adds jobs into `DelayQueue<ScheduledJob>`
+* Runs `dispatchLoop()` on a single dedicated thread
+
+### 2. `JobExecutor`
+
+* Wraps a cached thread pool
+* Uses `Semaphore` to limit concurrent executions
+
+### 3. `ScheduledJob`
+
+* Implements `Delayed` to sort jobs by scheduled execution time
+* Compatible with `DelayQueue`
+
+---
+
+## 🛡 Design Principles
+
+| Principle                  | How it's Achieved                                                               |
+| -------------------------- | ------------------------------------------------------------------------------- |
+| **Avoid thread leaks**     | No `new Thread().sleep()`; all jobs go through a pooled dispatcher              |
+| **Time-aware scheduling**  | Uses `DelayQueue` for automatic delay handling                                  |
+| **Separation of concerns** | Scheduler queues jobs, executor manages concurrency                             |
+| **Scalability**            | Can handle bursty submissions safely without spinning or blocking unnecessarily |

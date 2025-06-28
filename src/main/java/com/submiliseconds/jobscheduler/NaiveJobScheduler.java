@@ -2,7 +2,7 @@ package com.submiliseconds.jobscheduler;
 
 import java.time.Duration;
 
-public class DefaultJobScheduler implements JobScheduler {
+public class NaiveJobScheduler implements JobScheduler {
 
     private JobExecutor executor;
 
