@@ -7,6 +7,7 @@ public class BatchJob implements Job {
 
     private List<Job> jobs;
     private Job callBack;
+    private JobExecutor executor;
 
     public BatchJob(List<Job> jobs, Job callBack) {
         this.jobs = jobs;
@@ -22,18 +23,41 @@ public class BatchJob implements Job {
     public void run() {
         CountDownLatch latch = new CountDownLatch(jobs.size());
         for (Job job : jobs) {
-            try {
-                job.run();
-            } finally {
-                latch.countDown();
-            }
+            executor.execute(new Job() {
+                @Override
+                public String getName() {
+                    return job.getName();
+                }
+
+                @Override
+                public void run() {
+                    try {
+                        job.run();
+                    } finally {
+                        latch.countDown();
+                    }
+                }
+            });
         }
 
-        try {
-            latch.await();
-            callBack.run();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
+        executor.execute(
+                new Job() {
+                    @Override
+                    public String getName() {
+                        return getName() + "-Callback";
+                    }
+
+                    @Override
+                    public void run() {
+                        try {
+                            latch.await();
+                            callBack.run();
+                        } catch (InterruptedException e) {
+                            Thread.currentThread().interrupt();
+                        }
+                    }
+                }
+        );
+
     }
 }
